@@ -2,7 +2,7 @@
 
 This is an improved version of [Obsidian](https://obsidian.md)'s core [Note Composer](https://help.obsidian.md/Plugins/Note+composer) plugin.
 
-# Roadmap
+## Roadmap
 
 The goal of this plugin is to solve the following issue of the core Note Composer plugin.
 
