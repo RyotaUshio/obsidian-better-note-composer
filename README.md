@@ -1,29 +1,12 @@
-# Obsidian Sample Plugin
+# Better Note Composer for Obsidian
 
-This is a modified version of https://github.com/obsidianmd/obsidian-sample-plugin.
+This [Obsidian.md](https://obsidian.md) plugin fixes some problems of the core [Note Composer](https://help.obsidian.md/Plugins/Note+composer) plugin:
 
-## Differences from the original sample plugin
+- [Heading/block links are not updated properly](https://forum.obsidian.md/t/note-composer-links-to-blocks-and-headers-should-be-updated-when-extracting/37534)
+- Cannot undo extraction in the destination file
 
-- `*.ts` files are put in the `src` directory
-- The plugin class definition and settings-related code are separated into `main.ts` and `settings.ts`
-- [Release GitHub action](https://docs.obsidian.md/Plugins/Releasing/Release+your+plugin+with+GitHub+Actions) is already there
-  - Don't forget to go to `Settings > Actions > General > Workflow permissions` and turn on `Read and write permissions`
-- The default branch has been renamed `main`
+Currently, it only supports extraction of the current selection or heading.
 
-## Usage
+## Installation
 
-1. Create a new repository using this template ("Use this template" > "Create a new repository")
-2. Clone the created repository
-3. Modify at least the `id` & `name` fields in `manifest.json`.
-4. Modify `package.json` accordingly.
-5. Run `npm i` to install the dependencies
-6. Run `npm run dev` or `npm run build` to compile your plugin
-
-### Releasing your plugin
-
-1. If you haven't, go to `Settings > Actions > General > Workflow permissions` and turn on `Read and write permissions`
-2. Bump the version in `manifest.json` (and `package.json`) and then commit & push the change
-3. `git tag -a <version> -m "<version>"`
-4. `git push origin <version>`. This triggers the release action.
-5. When the action is completed, go to the release page of your repository. You will find a newly created draft release.
-6. Release the draft when you're ready.
+This plugin is currently available only via BRAT.
