@@ -6,6 +6,7 @@ This [Obsidian.md](https://obsidian.md) plugin fixes some problems of the core [
 - Cannot undo extraction in the destination file
 
 Currently, it only supports extraction of the current selection or heading.
+Use the core plugin for merging notes.
 
 ## Installation
 
