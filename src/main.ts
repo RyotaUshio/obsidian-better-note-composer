@@ -38,7 +38,7 @@ export default class BetterNoteComposerPlugin extends Plugin {
 		const commands = [
 			new BetterNoteComposerEditorCommand({
 				id: 'extract-selection',
-				name: 'Extract selection',
+				name: 'Extract current selection...',
 				checker: (editor, info) => {
 					// @ts-ignore
 					const cm: EditorView = editor.cm;
@@ -54,7 +54,7 @@ export default class BetterNoteComposerPlugin extends Plugin {
 			}),
 			new BetterNoteComposerEditorCommand({
 				id: 'extract-heading',
-				name: 'Extract heading',
+				name: 'Extract this heading...',
 				checker: (editor, info) => !!info.file,
 				executor: (editor, info) => {
 					const srcFile = info.file!;
