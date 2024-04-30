@@ -1,4 +1,4 @@
-import { BlockSubpathResult, Editor, FrontmatterLinkCache, HeadingSubpathResult, LinkCache, Loc, MarkdownView, PaneType, Reference, ReferenceCache, TFile, parseLinktext, resolveSubpath } from 'obsidian';
+import { BlockSubpathResult, CachedMetadata, Editor, FrontmatterLinkCache, HeadingSubpathResult, LinkCache, Loc, MarkdownView, PaneType, Reference, ReferenceCache, TFile, getLinkpath, parseLinktext, resolveSubpath } from 'obsidian';
 import { TransactionSpec, Line } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 
@@ -93,7 +93,7 @@ export class ExtractionTask extends BetterNoteComposerComponent {
 
     async process(cm: EditorView, paneType: PaneType | boolean) {
         const extractedContent = await this.getExtractedContent();
-        this.updateSrcFile(cm);
+        await this.updateSrcFile(cm);
         await this.updateBacklinksInOtherFiles();
         await this.openAndAppendToDstFile(extractedContent, paneType);
     }
@@ -128,10 +128,31 @@ export class ExtractionTask extends BetterNoteComposerComponent {
         return data.slice(this.extraction.srcRange.start.offset, endOffset);
     }
 
-    updateSrcFile(cm: EditorView) {
+    async updateSrcFile(cm: EditorView) {
         const sourcePath = this.extraction.srcRange.file.path;
         const cache = this.app.metadataCache.getCache(sourcePath);
         if (!cache) throw Error(`${this.plugin.manifest.name}: Cache not found for ${sourcePath}$`);
+
+        await this.updateSrcFileFrontmatter(cache);
+        this.updateSrcFileContent(cm, cache);
+    }
+
+    async updateSrcFileFrontmatter(cache: CachedMetadata) {
+        const sourcePath = this.extraction.srcRange.file.path;
+        const backlinks = (cache.frontmatterLinks ?? [])
+            .filter((link) => {
+                const linkpath = getLinkpath(link.link);
+                const targetFile = this.app.metadataCache.getFirstLinkpathDest(linkpath, sourcePath);
+                return targetFile?.path === sourcePath;
+            });
+        await this.updateBacklinksInFile(backlinks, sourcePath, {
+            updateFrontmatter: true,
+            updateContent: false,
+        });
+    }
+
+    updateSrcFileContent(cm: EditorView, cache: CachedMetadata) {
+        const sourcePath = this.extraction.srcRange.file.path;
 
         const links = [...cache.links ?? [], ...cache.embeds ?? []];
         const shouldBeUpdated = (link: ReferenceCache) => {
@@ -178,6 +199,8 @@ export class ExtractionTask extends BetterNoteComposerComponent {
         const allBacklinks = this.app.metadataCache.getBacklinksForFile(this.extraction.srcRange.file);
         const promises: Promise<void>[] = [];
         for (const sourcePath of allBacklinks.keys()) {
+            if (sourcePath === this.extraction.srcRange.file.path) continue;
+
             const backlinks: (ReferenceCache | FrontmatterLinkCache)[] = allBacklinks.get(sourcePath) ?? [];
             const promise = this.updateBacklinksInFile(backlinks, sourcePath);
             promises.push(promise);
@@ -185,7 +208,9 @@ export class ExtractionTask extends BetterNoteComposerComponent {
         await Promise.all(promises);
     }
 
-    async updateBacklinksInFile(backlinks: (ReferenceCache | FrontmatterLinkCache)[], sourcePath: string) {
+    async updateBacklinksInFile(backlinks: (ReferenceCache | FrontmatterLinkCache)[], sourcePath: string, options?: { updateFrontmatter: boolean, updateContent: boolean }) {
+        options = { updateFrontmatter: true, updateContent: true, ...options };
+
         const linksToBeUpdated: ReferenceCache[] = [];
         const frontmatterLinksToBeUpdated: FrontmatterLinkCache[] = [];
 
@@ -210,8 +235,7 @@ export class ExtractionTask extends BetterNoteComposerComponent {
         const file = this.app.vault.getAbstractFileByPath(sourcePath);
         if (!(file instanceof TFile)) return;
 
-        if (linksToBeUpdated.length > 0
-            && sourcePath !== this.extraction.srcRange.file.path) {
+        if (options.updateContent && linksToBeUpdated.length > 0) {
             await this.app.vault.process(file, (data) => {
                 linksToBeUpdated
                     .sort((a, b) => b.position.start.offset - a.position.start.offset)
@@ -223,7 +247,7 @@ export class ExtractionTask extends BetterNoteComposerComponent {
             })
         }
 
-        if (frontmatterLinksToBeUpdated.length > 0) {
+        if (options.updateFrontmatter && frontmatterLinksToBeUpdated.length > 0) {
             await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
                 frontmatterLinksToBeUpdated
                     .forEach((backlink) => {

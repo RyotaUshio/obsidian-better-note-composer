@@ -28,14 +28,11 @@ export default class BetterNoteComposerPlugin extends Plugin {
 	}
 
 	private registerCommands() {
-		const showModalAndRun = (srcFile: TFile, callback: (dstFile: TFile, evt: MouseEvent | KeyboardEvent) => Promise<any>) => {
+		const showModalAndRun = (srcFile: TFile, callback: (dstFile: TFile, evt: MouseEvent | KeyboardEvent) => any) => {
 			new MarkdownFileChooserModal(this)
 				.setFilter((file) => file !== srcFile)
 				.suggestFiles()
-				.then(async (dstFile, evt) => {
-					await callback(dstFile, evt);
-					// await this.app.workspace.getLeaf(Keymap.isModEvent(evt)).openFile(dstFile);
-				});
+				.then(callback);
 		};
 
 		const commands = [
@@ -50,7 +47,9 @@ export default class BetterNoteComposerPlugin extends Plugin {
 				},
 				executor: (editor, info) => {
 					const srcFile = info.file!;
-					showModalAndRun(srcFile, (dstFile, evt) => this.extractor.extractSelection(srcFile, editor, dstFile, Keymap.isModEvent(evt)));
+					showModalAndRun(srcFile, (dstFile, evt) => {
+						this.extractor.extractSelection(srcFile, editor, dstFile, Keymap.isModEvent(evt))
+					});
 				}
 			}),
 			new BetterNoteComposerEditorCommand({
@@ -59,7 +58,9 @@ export default class BetterNoteComposerPlugin extends Plugin {
 				checker: (editor, info) => !!info.file,
 				executor: (editor, info) => {
 					const srcFile = info.file!;
-					showModalAndRun(srcFile, (dstFile, evt) => this.extractor.extractHeading(srcFile, editor, dstFile, Keymap.isModEvent(evt)));
+					showModalAndRun(srcFile, (dstFile, evt) => {
+						this.extractor.extractHeading(srcFile, editor, dstFile, Keymap.isModEvent(evt))
+					});
 				}
 			}),
 		];
