@@ -1,5 +1,5 @@
 import BetterNoteComposerPlugin from 'main';
-import { FuzzySuggestModal, Notice, Platform, TFile } from 'obsidian';
+import { FuzzySuggestModal, Keymap, Notice, Platform, TFile } from 'obsidian';
 import { createFileIfNotExist } from 'utils';
 
 
@@ -35,34 +35,34 @@ export class MarkdownFileChooserModal extends FuzzySuggestModal<TFile> {
         // @ts-ignore
         this.scope.register(null, 'Enter', (evt) => {
             if (!evt.isComposing) {
+                if (Keymap.isModifier(evt, 'Shift')) {
+                    let path = this.inputEl.value;
+
+                    if (path.includes('.')) {
+                        const extension = path.split('.').last();
+                        if (extension && extension !== 'md') {
+                            new Notice(`${this.plugin.manifest.name}: Non-markdown file is not allowed`);
+                            return;
+                        }
+                    }
+
+                    if (!path.endsWith('.md')) {
+                        path += '.md';
+                    }
+
+                    createFileIfNotExist(this.app, path, '')
+                        .then((file) => {
+                            if (file) this.onSubmit(file, evt);
+                        });
+                    this.close();
+
+                    return false;
+                }
+
                 // @ts-ignore
                 this.chooser.useSelectedItem(evt);
                 return false;
             }
-        });
-
-        this.scope.register(['Shift'], 'Enter', (evt) => {
-            let path = this.inputEl.value;
-
-            if (path.includes('.')) {
-                const extension = path.split('.').last();
-                if (extension && extension !== 'md') {
-                    new Notice(`${this.plugin.manifest.name}: Non-markdown file is not allowed`);
-                    return;
-                }
-            }
-
-            if (!path.endsWith('.md')) {
-                path += '.md';
-            }
-
-            createFileIfNotExist(this.app, path, '')
-                .then((file) => {
-                    if (file) this.onSubmit(file, evt);
-                });
-            this.close();
-
-            return false;
         });
     }
 

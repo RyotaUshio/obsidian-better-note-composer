@@ -1,6 +1,6 @@
 {
     "name": "obsidian-better-note-composer",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "An Obsidian.md plugin",
     "scripts": {
         "dev": "node esbuild.config.mjs",
